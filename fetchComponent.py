@@ -9,6 +9,9 @@ import subprocess
 import click
 from tempfile import TemporaryDirectory
 from pathlib import Path
+from obj2wrl import obj2wrl
+import logging
+logging.getLogger().setLevel(logging.INFO)
 
 class FormatError(RuntimeError):
     pass
@@ -192,7 +195,7 @@ def fetchAndConvert3D(componentDetail, kicadlib, pathvar, token, cookies):
         wrlFile = os.path.join(lib3D, packageName + ".wrl")
         with open(objFile, "w") as f:
             f.write(res.text)
-        subprocess.check_call(["ctmconv", objFile, wrlFile])
+        obj2wrl(objFile, wrlFile)
 
         desc = pcbnew.MODULE_3D_SETTINGS()
         desc.m_Filename = "${" + pathvar + "}/" + wrlFile
@@ -203,16 +206,7 @@ def fetchAndConvert3D(componentDetail, kicadlib, pathvar, token, cookies):
         submodels += 1
     return models
 
-
-@click.command()
-@click.argument("LCSC")
-@click.option("--kicadLib", type=click.Path(dir_okay=True, file_okay=False), required=True,
-    help="Path to KiCAD library where to store the footprint")
-@click.option("--force", is_flag=True,
-    help="Overwrite footprint if it already exists in the library")
-@click.option("--pathVar", type=str, default="EASY_EDA_3D",
-    help="Name of variable, that will be used for prefixing 3D models paths")
-def fetchLcsc(kicadlib, force, lcsc, pathvar):
+def fetchLcsc_(kicadlib, force, lcsc, pathvar):
     """
     Fetch a footprint based on LCSC code
     """
@@ -237,7 +231,18 @@ def fetchLcsc(kicadlib, force, lcsc, pathvar):
         footprint.Add3DModel(model)
 
     pcbnew.PCB_IO().FootprintSave(kicadlib, footprint)
-    print("Warning: Python will crash now as the KiCAD improperly defines SWIG handles and double free occurs")
+
+@click.command()
+@click.argument("LCSC")
+@click.option("--kicadLib", type=click.Path(dir_okay=True, file_okay=False), required=True,
+    help="Path to KiCAD library where to store the footprint")
+@click.option("--force", is_flag=True,
+    help="Overwrite footprint if it already exists in the library")
+@click.option("--pathVar", type=str, default="EASY_EDA_3D",
+    help="Name of variable, that will be used for prefixing 3D models paths")
+
+def fetchLcsc(kicadlib, force, lcsc, pathvar):
+    fetchLcsc_(kicadlib, force, lcsc, pathvar)
 
 @click.command()
 @click.argument("name")
