@@ -6,10 +6,10 @@ import re
 import pcbnew
 import os
 import subprocess
-import click
+
 from tempfile import TemporaryDirectory
 from pathlib import Path
-from obj2wrl import obj2wrl
+from .obj2wrl import obj2wrl
 import logging
 logging.getLogger().setLevel(logging.INFO)
 
@@ -231,14 +231,16 @@ def fetchLcsc_(kicadlib, force, lcsc, pathvar):
         footprint.Add3DModel(model)
 
     pcbnew.PCB_IO().FootprintSave(kicadlib, footprint)
+    
+import click
 
 @click.command()
 @click.argument("LCSC")
 @click.option("--kicadLib", type=click.Path(dir_okay=True, file_okay=False), required=True,
-    help="Path to KiCAD library where to store the footprint")
+    help="Path to KiCAD library where to store the footprint", default="JLC.pretty")
 @click.option("--force", is_flag=True,
     help="Overwrite footprint if it already exists in the library")
-@click.option("--pathVar", type=str, default="EASY_EDA_3D",
+@click.option("--pathVar", type=str, default="KIPRJMOD",
     help="Name of variable, that will be used for prefixing 3D models paths")
 
 def fetchLcsc(kicadlib, force, lcsc, pathvar):
